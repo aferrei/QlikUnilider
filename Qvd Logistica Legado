@@ -1,0 +1,335 @@
+SET ThousandSep='.';
+SET DecimalSep=',';
+SET MoneyThousandSep='.';
+SET MoneyDecimalSep=',';
+SET MoneyFormat='R$ #.##0,00;-R$ #.##0,00';
+SET TimeFormat='hh:mm:ss';
+SET DateFormat='DD/MM/YYYY';
+SET TimestampFormat='DD/MM/YYYY hh:mm:ss[.fff]';
+SET MonthNames='jan;fev;mar;abr;mai;jun;jul;ago;set;out;nov;dez';
+SET DayNames='seg;ter;qua;qui;sex;sáb;dom';
+
+ODBC CONNECT TO BI_Comercial_Unilider (XUserId is FAVIbYRNJbacL, XPassword is ZBQSQYRNJbaEXSRNWD);
+//-------- Start Multiple Select Statements ------
+AtivLogLegada:
+
+load
+	AtivLogFerramentaID,
+    AtivLogID,
+    AtivLogIDSepa,
+    AtivLogSituacaoID,
+    AtivLogSubTipoID,
+    AtivLogTipoRessupID,
+    CaixaFechada,
+    CdBarraAtivLog,
+    CdDoca,
+    CdEmp,
+    CdUsrCanc,
+    CdUsrCorte,
+    CdUsrGerador,
+    CdUsrResp,
+    CodigoLacre,
+    Corte,
+    DtCanc,
+    DtFim,
+    DtGeracao,
+    DtInicio,
+    ErroValidacaoGeracao,
+    Falha,
+    MomentoGeraItens,
+    NumLock,
+    NuPalete,
+    NuPed,
+    NuRom,
+    Peso,
+    Placa,
+    QtdeImpressao,
+    QtdeProdutos,
+    QtdeVolumes,
+    RessuprimentoColetaID,
+    RowID,
+    SepaVolPadrao,
+    SeqVolume,
+    SitCorte,
+    TipoSeparacaoID,
+    Volume,
+    diferenca,
+    DtFimdt,
+    Chave,
+    DtIniciodt,
+    WmsCategGrupoID;
+
+SQL SELECT AtivLogFerramentaID,
+    AtivLogID,
+    iif(DATEDIFF(DAY,DtInicio,DtFim)is null,0,DATEDIFF(DAY,DtInicio,DtFim)) as diferenca,
+    AtivLogIDSepa,
+    AtivLogSituacaoID,
+    AtivLogSubTipoID,
+    AtivLogTipoRessupID,
+    CaixaFechada,
+    CdBarraAtivLog,
+    CdDoca,
+    CdEmp,
+    CdUsrCanc,
+    CdUsrCorte,
+    CdUsrGerador,
+    CdUsrResp,
+    CodigoLacre,
+    Corte,
+    DtCanc,
+    DtFim,
+    DtGeracao,
+    DtInicio,
+    CAST(DtInicio AS DATE)AS DtIniciodt,
+    CAST(DtFim AS DATE)AS DtFimdt,
+    ErroValidacaoGeracao,
+    Falha,
+    MomentoGeraItens,
+    NumLock,
+    NuPalete,
+    NuPed,
+    NuRom,
+    Peso,
+    Placa,
+    QtdeImpressao,
+    QtdeProdutos,
+    QtdeVolumes,
+    RessuprimentoColetaID,
+    RowID,
+    SepaVolPadrao,
+    SeqVolume,
+    SitCorte,
+    TipoSeparacaoID,
+    Volume,
+    WmsCategGrupoID,
+    cast(cast(DtInicio as date)as varchar) + cast(CdUsrResp as varchar) as Chave
+FROM MOINHO.dbo.AtivLog
+WHERE
+cast(DtInicio AS date) < cast(getdate()as date);
+STORE *  from AtivLogLegada into C:\QlikView\Producao\QVD\LOGISTICA\AtivLogLegada.QVD;
+DROP Table AtivLogLegada;
+
+
+AtivLogItemLegada:
+load
+	AtivLogID,
+    AtivLogItemID,
+    AtivLogTipoItemID,
+    BipLote,
+    CdBarra,
+    CdEmpCarreg,
+    CdEmpEndDest,
+    CdEmpEndOrig,
+    CdEmpVol,
+    CdForn,
+    CdLocalEndDest,
+    CdLocalEndOrig,
+    CdProd,
+    Descricao,
+    DtValidade,
+    Lote,
+    NfeChaveAcesso,
+    NuNf,
+    NuPedCarreg,
+    NuPedVol,
+    Ordem,
+    Original,
+    Qtde,
+    QtdeConf,
+    rowid,
+    SeqLote,
+    SeqNfReci,
+    SeqWmsEndDest,
+    SeqWmsEndOrig,
+    Situacao,
+    Unidade,
+    WmsEstoqueConsolidID;
+SQL SELECT AtivLogID,
+    AtivLogItemID,
+    AtivLogTipoItemID,
+    BipLote,
+    CdBarra,
+    CdEmpCarreg,
+    CdEmpEndDest,
+    CdEmpEndOrig,
+    CdEmpVol,
+    CdForn,
+    CdLocalEndDest,
+    CdLocalEndOrig,
+    CdProd,
+    Descricao,
+    DtValidade,
+    Lote,
+    NfeChaveAcesso,
+    NuNf,
+    NuPedCarreg,
+    NuPedVol,
+    Ordem,
+    Original,
+    Qtde,
+    QtdeConf,
+    rowid,
+    SeqLote,
+    SeqNfReci,
+    SeqWmsEndDest,
+    SeqWmsEndOrig,
+    Situacao,
+    Unidade,
+    WmsEstoqueConsolidID
+FROM MOINHO.dbo.AtivLogItem
+where
+AtivLogID IN (SELECT	
+	AtivLogID
+	FROM
+	dbo.AtivLog 
+	WHERE
+	cast( DtInicio AS date) < cast(getdate()as date)
+) ;
+STORE *  from AtivLogItemLegada into C:\QlikView\Producao\QVD\LOGISTICA\AtivLogItemLegada.QVD;
+DROP Table AtivLogItemLegada;
+
+AtivLogSubtipo:
+load
+	AtivLogSubtipoID,
+    AtivLogTipoID,
+    Ativo,
+    Descricao,
+    NumLock;
+    
+SQL SELECT AtivLogSubtipoID,
+    AtivLogTipoID,
+    Ativo,
+    Descricao,
+    NumLock
+    
+FROM MOINHO.dbo.AtivLogSubTipo;
+
+STORE *  from AtivLogSubtipo into C:\QlikView\Producao\QVD\LOGISTICA\AtivLogSubtipo.QVD;
+DROP Table AtivLogSubtipo;
+
+AtivLogTipo:
+load
+	AtivLogTipoID,
+    Ativo,
+    Descricao,
+    ExigirTipoSeparacao,
+    ExigirWmsCategGrupo,
+    NumLock,
+    PermiteLibManual,
+    Prioridade,
+    WmsEndEmTransito;
+
+SQL SELECT AtivLogTipoID,
+    Ativo,
+    Descricao,
+    ExigirTipoSeparacao,
+    ExigirWmsCategGrupo,
+    NumLock,
+    PermiteLibManual,
+    Prioridade,
+    WmsEndEmTransito
+FROM MOINHO.dbo.AtivLogTipo;
+STORE *  from AtivLogTipo into C:\QlikView\Producao\QVD\LOGISTICA\AtivLogTipo.QVD;
+DROP Table AtivLogTipo;
+
+Empresa:
+load
+	ativo,
+    cd_emp,
+    cep,
+    cgc,
+    EmpresaID,
+    endereco,
+    envia_ped_dir,
+    estado,
+    faixa_rec_ate_simpnac,
+    faixa_rec_de_simpnac,
+    icms_simpnac,
+    IcmsCliSimpNac,
+    inscricao,
+    irpj_simpnac,
+    Latitude,
+    logradouro,
+    Longitude,
+    municipio,
+    pis_simpnac,
+    raz_soc;
+SQL SELECT 
+    ativo,
+    cd_emp,
+    cep,
+    cgc,
+    EmpresaID,
+    endereco,
+    envia_ped_dir,
+    estado,
+    faixa_rec_ate_simpnac,
+    faixa_rec_de_simpnac,
+    icms_simpnac,
+    IcmsCliSimpNac,
+    inscricao,
+    irpj_simpnac,
+    Latitude,
+    logradouro,
+    Longitude,
+    municipio,
+    pis_simpnac,
+    raz_soc
+    
+FROM MOINHO.dbo.empresa;
+STORE *  from Empresa into C:\QlikView\Producao\QVD\LOGISTICA\Empresa.QVD;
+DROP Table Empresa;
+
+Produto:
+load
+	ativo,
+    descricao,
+    dt_cad,
+    fator,
+	cd_prod;
+SQL SELECT 
+    ativo,
+    descricao,
+    dt_cad,
+    qtde_unid_cmp as fator,
+	cd_prod
+	
+FROM MOINHO.dbo.produto;
+STORE *  from Produto into C:\QlikView\Producao\QVD\LOGISTICA\Produto.QVD;
+DROP Table Produto;
+
+Usuario:
+LOAD
+	ativo,
+    cd_usuario,
+    dt_admissao,
+    nome,
+    UsuarioID;
+SQL SELECT ativo,
+    cd_usuario,
+    dt_admissao,
+    nome,
+    UsuarioID
+    
+FROM MOINHO.dbo.usuario;
+STORE *  from Usuario into C:\QlikView\Producao\QVD\LOGISTICA\Usuario.QVD;
+DROP Table Usuario;
+
+TipoSeparacao:
+load
+	Descricao,
+    Sigla,
+    TipoSeparacaoID;	
+SQL SELECT Descricao,
+    Sigla,
+    TipoSeparacaoID
+FROM MOINHO.dbo.TipoSeparacao;
+STORE *  from TipoSeparacao into C:\QlikView\Producao\QVD\LOGISTICA\TipoSeparacao.QVD;
+DROP Table TipoSeparacao;
+
+
+
+
+//-------- End Multiple Select Statements ------
+
+

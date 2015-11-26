@@ -1,0 +1,240 @@
+/****************
+DESENVOLVIDO POR ALEX FERREIRA
+EM 10/2015 PELA EMPRESA UNILIDER DISTRIBUIDORA S/A
+****************/
+
+SET ThousandSep='.';
+SET DecimalSep=',';
+SET MoneyThousandSep='.';
+SET MoneyDecimalSep=',';
+SET MoneyFormat='R$ #.##0,00;-R$ #.##0,00';
+SET TimeFormat='hh:mm:ss';
+SET DateFormat='DD/MM/YYYY';
+SET TimestampFormat='DD/MM/YYYY hh:mm:ss[.fff]';
+SET MonthNames='jan;fev;mar;abr;mai;jun;jul;ago;set;out;nov;dez';
+SET DayNames='seg;ter;qua;qui;sex;sáb;dom';
+
+
+AtivLog:
+	LOAD
+	Chave,
+	AtivLogID,
+	AtivLogID as AtivLogID2,
+    AtivLogIDSepa,
+    AtivLogSituacaoID,
+    AtivLogSubTipoID,
+    AtivLogTipoRessupID,
+    CaixaFechada,
+    CdEmp as cd_emp,
+    CdUsrCanc,
+    CdUsrGerador,
+    CdUsrResp as cd_usuario,
+    Corte,
+    DtCanc,
+    DtFim,
+    DtIniciodt,
+    DtFimdt,
+    diferenca,
+    Time(DtFim) - Time(DtInicio) as TempoProd,
+    DtGeracao,
+    day(DtInicio) as Dia,
+    month(DtInicio) as Mês,
+    Year(DtInicio) as Ano,
+    WeekDay(DtInicio) as dia_semana,
+    DtInicio,
+    Falha,
+    NumLock,
+    QtdeProdutos,
+    QtdeVolumes,
+    RessuprimentoColetaID,  
+    TipoSeparacaoID,
+    Volume,
+    WmsCategGrupoID    
+    From [C:\QlikView\Producao\QVD\LOGISTICA\AtivLogmensal.QVD] (qvd);
+    
+    JOIN
+    
+    LOAD
+	Chave,
+	AtivLogID,
+	AtivLogID as AtivLogID2,
+    AtivLogIDSepa,
+    AtivLogSituacaoID,
+    AtivLogSubTipoID,
+    AtivLogTipoRessupID,
+    CaixaFechada,
+    CdEmp as cd_emp,
+    CdUsrCanc,
+    diferenca,
+    CdUsrGerador,
+    CdUsrResp as cd_usuario,
+    Corte,
+    DtCanc,
+    DtFim,
+    DtFimdt,
+    DtIniciodt,
+    Time(DtFim) - Time(DtInicio) as TempoProd,
+    DtGeracao,
+    day(DtInicio) as Dia,
+    month(DtInicio) as Mês,
+    Year(DtInicio) as Ano,
+    DtInicio,
+    Falha,
+    NumLock,
+    QtdeProdutos,
+    QtdeVolumes,
+    RessuprimentoColetaID,  
+    TipoSeparacaoID,
+    Volume,
+    WmsCategGrupoID    
+    From [C:\QlikView\Producao\QVD\LOGISTICA\AtivLogAtual.QVD] (qvd);
+    
+    AtivLogConfEntr:
+    
+    LOAD
+    AtivLogConfEntrID,
+    AtivLogID as AtivLogID2,
+    CdForn,
+    Falha as ConfEnt_Falha,
+    NuNf,
+    rowid
+    From [C:\QlikView\Producao\QVD\LOGISTICA\AtivLogConfEntr.QVD] (qvd);
+    
+    AtivLogItem:
+    LOAD
+   	AtivLogID,
+    AtivLogItemID as A_AtivLogItemID,
+    AtivLogTipoItemID,
+    CdProd as cd_prod,
+    Descricao,
+    DtValidade,
+    Qtde,
+    QtdeConf,
+    SeqLote,
+    Situacao,
+    Unidade,
+    WmsEstoqueConsolidID   
+   	From [C:\QlikView\Producao\QVD\LOGISTICA\AtivLogItemMensal.QVD] (qvd);
+  
+  	JOIN
+  	
+  	LOAD
+   	AtivLogID,
+    AtivLogItemID as A_AtivLogItemID,
+    AtivLogTipoItemID,
+    CdProd as cd_prod,
+    Descricao,
+    DtValidade,
+    Qtde,
+    QtdeConf,
+    SeqLote,
+    Situacao,
+    Unidade,
+    WmsEstoqueConsolidID   
+   	From [C:\QlikView\Producao\QVD\LOGISTICA\AtivLogItemAtual.QVD] (qvd);
+   	
+   	AtivLogSubtipo:
+ 	LOAD
+  	AtivLogSubtipoID as AtivLogSubTipoID,
+   	AtivLogTipoID,
+  	Ativo as AS_ativo,
+   	Descricao as AS_Descricao
+   	
+    From [C:\QlikView\Producao\QVD\LOGISTICA\AtivLogSubtipo.QVD] (qvd);
+    
+    AtivLogTipo:
+    LOAD
+    AtivLogTipoID,
+    Ativo as A_ativo,
+    Descricao as A_Descricao,  
+    PermiteLibManual,
+    Prioridade
+
+    From [C:\QlikView\Producao\QVD\LOGISTICA\AtivLogTipo.QVD] (qvd);
+    
+    Empresa:
+    LOAD
+    ativo as E_ativo,
+    cd_emp,
+    cep,
+    cgc,
+    EmpresaID,
+    endereco,
+    envia_ped_dir,
+    estado,
+    faixa_rec_ate_simpnac,
+    faixa_rec_de_simpnac,
+    icms_simpnac,
+    IcmsCliSimpNac,
+    inscricao,
+    irpj_simpnac,
+    Latitude,
+    logradouro,
+    Longitude,
+    municipio,
+    pis_simpnac,
+    raz_soc
+    From [C:\QlikView\Producao\QVD\LOGISTICA\Empresa.QVD] (qvd);
+    
+    Produto:
+    LOAD
+    //ativo,
+    descricao,
+    dt_cad,
+    fator,
+	cd_prod
+	From [C:\QlikView\Producao\QVD\LOGISTICA\Produto.QVD] (qvd);
+    
+    Usuario:
+    LOAD
+    ativo AS U_ATIVO,
+    cd_usuario,
+    dt_admissao,
+    nome,
+    UsuarioID
+    From [C:\QlikView\Producao\QVD\LOGISTICA\Usuario.QVD] (qvd);
+    
+    Jornada:
+    
+	LOAD
+	Chave,
+	//CdUsrResp,
+    DtFim as DtFimJor,
+    jornada,
+    trabalhado
+	From [C:\QlikView\Producao\QVD\LOGISTICA\Jornada.QVD] (qvd);
+	
+	TipoSeparacao:
+	load
+	Descricao as DescricaoSepa ,
+    Sigla,
+    TipoSeparacaoID
+    From [C:\QlikView\Producao\QVD\LOGISTICA\TipoSeparacao.QVD] (qvd);
+	
+	
+	[TempoTab]:
+	LOAD
+	 recno() as Tab
+	,Pasta
+	,ProximaPasta
+	,Segundos
+	,rangesum(peek(PrevSumSegundos),peek(Segundos)) as PrevSumSegundos
+	INLINE [
+	Pasta, Segundos, ProximaPasta
+	SH02,60,SH04
+	SH04,60,SH05
+	SH05,60,SH06
+	SH06,60,SH07
+	SH07,60,SH09
+	SH09,60,SH08
+	SH08,60,SH12
+	SH12,60,SH13
+	SH13,60,SH14
+	SH14,60,SH15
+	SH15,60,SH03
+	SH03,60,SH02
+	];
+	
+	SET vSegundos	= 'mod(round((now()-now(2))*86400),sum(Segundos))'; // Sem necessidade, utilizado apenas para exibir a contagem dos segundos
+	SET vShow		= 'mod(round((now()-now(2))*86400)-only({<Tab={$1}>} PrevSumSegundos),sum(Segundos))<only({<Tab={$1}>} Segundos)';
+	SET vShowPasta	= 'mod(round((now()-now(2))*86400)-only({<Pasta={$1}>} PrevSumSegundos),sum(Segundos))<only({<Pasta={$1}>} Segundos)';
