@@ -1,0 +1,395 @@
+SET ThousandSep='.';
+SET DecimalSep=',';
+SET MoneyThousandSep='.';
+SET MoneyDecimalSep=',';
+SET MoneyFormat='R$ #.##0,00;-R$ #.##0,00';
+SET TimeFormat='hh:mm:ss';
+SET DateFormat='DD/MM/YYYY';
+SET TimestampFormat='DD/MM/YYYY hh:mm:ss[.fff]';
+SET MonthNames='jan;fev;mar;abr;mai;jun;jul;ago;set;out;nov;dez';
+SET DayNames='seg;ter;qua;qui;sex;sáb;dom';
+
+ODBC CONNECT32 TO BI_Comercial_Unilider (XUserId is aHOVZYRNJbaaP, XPassword is UABMVYRNJbaEXSRNCD);
+
+QUALIFY *;
+
+CONTA_PAGAR:
+LOAD cd_forn,
+    dt_emissao,
+    dt_vencto,
+    valor,
+    vl_pago,
+    nu_ped,
+    nu_nf,
+    serie_nf,
+    tipo,
+    sit_comp,
+    sit_cheque,
+    referencia,
+    local_pg,
+    situacao,
+    cd_texto,
+    num_lock,
+    cd_emp,
+    especial,
+    status_lib,
+    cd_usr_lanc,
+    dt_lanc,
+    vl_desconto,
+    cd_barra,
+    tp_pgto,
+    nu_banco_lctc,
+    nu_agencia_lctc,
+    nu_conta_lctc,
+    nosso_num,
+    dt_vencto_orig,
+    seq_pag,
+    dt_desc_fin,
+    vl_desc_fin,
+    vl_juros,
+    vl_multa,
+    seq_frota,
+    num_autenticacao,
+    vl_imposto_retencao,
+    SLMaisFatComID,
+    rowid;
+SQL SELECT *
+FROM MOINHO.dbo.cta_pag;
+STORE * FROM CONTA_PAGAR INTO CONTA_PAGAR.QVD;
+DROP TABLE CONTA_PAGAR;
+
+
+
+
+PAG_CCUS:
+LOAD seq_pag,
+    cd_ccusto,
+    perc_rateio,
+    valor,
+    rowid;
+SQL SELECT *
+FROM MOINHO.dbo.pag_ccus;
+STORE * FROM PAG_CCUS INTO PAG_CCUS.QVD;
+DROP TABLE PAG_CCUS;
+
+PAG_LANC:
+LOAD seq_pag,
+    seq_lanc,
+    cd_emp,
+    cd_conta,
+    dre_compet,
+    valor,
+    perc_rateio,
+    vl_saldo,
+    principal,
+    rowid;
+SQL SELECT *
+FROM MOINHO.dbo.pag_lanc;
+STORE * FROM PAG_LANC INTO PAG_LANC.QVD;
+DROP TABLE PAG_LANC;
+
+
+
+CONTA_RECEBER:
+LOAD nu_tit,
+    serie,
+    tp_tit,
+    cd_clien,
+    dt_emis,
+    dt_venc,
+    dt_desconto,
+    nu_banco_cob,
+    nu_agencia_cob,
+    nu_conta_cob,
+    nu_agen_cob_tit,
+    nu_bancario,
+    nu_banco_cc,
+    nu_agencia_cc,
+    nu_conta_cc,
+    valor,
+    vl_pago,
+    vl_desconto,
+    vl_multa,
+    vl_juros,
+    vl_abatimento,
+    vl_taxa,
+    sit_cnab,
+    situacao,
+    sit_inad,
+    sit_emissao,
+    cont_emis,
+    cd_texto,
+    avulso,
+    tp_pgto,
+    local_pgto,
+    dt_venc_orig,
+    lanc_chq,
+    dt_deposito,
+    serie_origem,
+    cd_barra_cheque,
+    renegociado,
+    nu_banco_lctc,
+    nu_agencia_lctc,
+    nu_conta_lctc,
+    cd_vend_comis,
+    vl_comis,
+    cd_vend_lc,
+    vl_comis_lanc,
+    dt_lanc_chq_pre,
+    cd_usr_ger_chq_pre,
+    vl_base_comis,
+    seq_cheque,
+    nu_tit_origem,
+    cd_cobrador,
+    cd_emp,
+    sit_jur,
+    tp_lanc_dif_juros,
+    valor_dif_juros,
+    nu_tit_dif_juros,
+    serie_dif_juros,
+    cd_vend_dif_juros,
+    cd_motor_dif_juros,
+    vl_verba,
+    vl_verba_emp,
+    vl_verba_equip,
+    dias_prorr_venc_rota,
+    cd_vend_verba,
+    seq_cc_cob_comp,
+    especial,
+    vl_tot_dev,
+    vl_desc_fin_nao_aplic,
+    referencia,
+    nu_nf_orig_nc,
+    cd_emp_orig_nc,
+    nu_ped_orig_nc,
+    nu_tit_emp_fat,
+    bco_corresp,
+    nu_banco_corresp,
+    seq_serasa,
+    nu_tit_seq_serasa,
+    rowid,
+    cod_aux_banco_abc;
+SQL SELECT *
+FROM MOINHO.dbo.titrec;
+STORE * FROM CONTA_RECEBER INTO CONTA_RECEBER.QVD;
+DROP TABLE CONTA_RECEBER;
+
+CONTA_CONTABIL:
+LOAD cd_conta,
+    descricao,
+    tp_conta,
+    fornecedor,
+    num_lock,
+    ativo,
+    cd_conta_prov_asplan,
+    dre_exibe,
+    dre_seq,
+    rowid;
+SQL SELECT *
+FROM MOINHO.dbo.conta;
+STORE * FROM CONTA_CONTABIL INTO CONTA_CONTABIL.QVD;
+DROP TABLE CONTA_CONTABIL;
+
+GRUPO_CTP:
+LOAD cd_grupo_ctp,
+    descricao,
+    num_lock,
+    ativo,
+    dre_seq,
+    dre_totaliz,
+    dre_totaliz_nome,
+    rowid;
+SQL SELECT *
+FROM MOINHO.dbo.grupo_ctp;
+STORE * FROM GRUPO_CTP INTO GRUPO_CTP.QVD;
+DROP TABLE GRUPO_CTP;
+
+
+
+
+
+
+ODBC CONNECT TO BI_Contabilidade_Unilider (XUserId is caHZdYRNJbaQI, XPassword is TPYHXYRNJbaEXSRNbB);
+
+
+
+
+
+
+
+
+CENTRO_CUSTO:
+LOAD idScI100CentroCusto,
+    Codigo,
+    Descricao,
+    Ativo,
+    idEmpresa,
+    RowId,
+    DataInclusao;
+SQL SELECT *
+FROM FISCON.dbo.ScI100CentroCusto;
+STORE * FROM CENTRO_CUSTO INTO CENTRO_CUSTO.QVD;
+DROP TABLE CENTRO_CUSTO;
+
+
+
+LANCAMENTO_CONTABIL:
+LOAD idScI200LancamentoContabil,
+    Numero,
+    Data,
+    Valor,
+    Tipo,
+    idEmpresa,
+    idContabilizacao,
+    idTipoContabilizacao,
+    Alterado,
+    RowId,
+    idContabilizacaoSeq,
+    idContabilizacaoOld,
+    TipoInclusao,
+    Reprocessar,
+    DataGeracao;
+SQL SELECT *
+FROM FISCON.dbo.ScI200LancamentoContabil;
+STORE * FROM LANCAMENTO_CONTABIL INTO LANCAMENTO_CONTABIL.QVD;
+DROP TABLE LANCAMENTO_CONTABIL;
+
+
+PLANO_CONTA:
+LOAD idScI050PlanoConta,
+    DataInclusao,
+    Codigo,
+    Descricao,
+    TipoConta,
+    Natureza,
+    Nivel,
+    Ativo,
+    idEmpresa,
+    idScI050PlanoContaTotalizadora,
+    GrupoConta;
+SQL SELECT *
+FROM FISCON.dbo.ScI050PlanoConta;
+STORE * FROM PLANO_CONTA INTO PLANO_CONTA.QVD;
+DROP TABLE PLANO_CONTA;
+
+
+PLANO_CONTA_REFERENCIAL:
+LOAD idScI051PlanoContaReferencial,
+    DataInicial,
+    idScI050PlanoConta,
+    CodigoInstituicao,
+    idScI100CentroCusto,
+    idScPlanoContaReferencial,
+    idEmpresa;
+SQL SELECT *
+FROM FISCON.dbo.ScI051PlanoContaReferencial;
+STORE * FROM PLANO_CONTA_REFERENCIAL INTO PLANO_CONTA_REFERENCIAL.QVD;
+DROP TABLE PLANO_CONTA_REFERENCIAL;
+
+
+HISTORICO_PADRONIZADO:
+LOAD idScI075HistoricoPadronizado,
+    DataInicial,
+    Codigo,
+    Descricao,
+    Ativo,
+    idEmpresa;
+SQL SELECT *
+FROM FISCON.dbo.ScI075HistoricoPadronizado;
+STORE * FROM HISTORICO_PADRONIZADO INTO HISTORICO_PADRONIZADO.QVD;
+DROP TABLE HISTORICO_PADRONIZADO;
+
+
+PLANO_CONTA_REFERENCIAL:
+LOAD idScPlanoContaReferencial,
+    CodigoInstituicao,
+    Codigo,
+    Descricao,
+    DataInicial,
+    DataFinal,
+    TipoConta;
+SQL SELECT *
+FROM FISCON.dbo.ScPlanoContaReferencial;
+STORE * FROM PLANO_CONTA_REFERENCIAL INTO PLANO_CONTA_REFERENCIAL.QVD;
+DROP TABLE PLANO_CONTA_REFERENCIAL;
+
+
+
+TIPO_CONTABILIZAÇÃO:
+LOAD idTipoContabilizacao,
+    Descricao;
+SQL SELECT *
+FROM FISCON.dbo.TipoContabilizacao;
+STORE * FROM TIPO_CONTABILIZAÇÃO INTO TIPO_CONTABILIZAÇÃO.QVD;
+DROP TABLE TIPO_CONTABILIZAÇÃO;
+
+
+TIPO_MOVIMENTO:
+LOAD idTipoMovimento,
+    DataInicial,
+    Codigo,
+    Descricao,
+    Estorno;
+SQL SELECT *
+FROM FISCON.dbo.TipoMovimento;
+STORE * FROM TIPO_MOVIMENTO INTO TIPO_MOVIMENTO.QVD;
+DROP TABLE TIPO_MOVIMENTO;
+
+
+
+
+
+
+//LOAD ContaReduzida,
+//    Codigo,
+//    TipoConta,
+//    ContaTotalizadora,
+//    Natureza,
+//    Nivel,
+//    Descricao;
+//SQL SELECT *
+//FROM FISCON.dbo.tmp_PlanoConta;
+
+
+
+PARTIDA_LANCAMENTO:
+LOAD idScI250PartidasLancamento,
+    idScI200LancamentoContabil,
+    idScI050PlanoConta,
+    idScI100CentroCusto,
+    ValorPartida,
+    NaturezaPartida,
+    NumeroArquivamento,
+    idScI075HistoricoPadronizado,
+    Historico,
+    idSf0150Participante,
+    idEmpresa;
+SQL SELECT *
+FROM FISCON.dbo.ScI250PartidasLancamento;
+STORE * FROM PARTIDA_LANCAMENTO INTO PARTIDA_LANCAMENTO.QVD;
+DROP TABLE PARTIDA_LANCAMENTO;
+
+
+FATOS_CONTABEIS:
+LOAD idScJ215FatosContabeis,
+    idScJ210DlpaDmpl,
+    idScJ200HistoricoFatosContabeis,
+    Valor,
+    IndicadorSituacao,
+    idEmpresa,
+    idScI200LancamentoContabil;
+SQL SELECT *
+FROM FISCON.dbo.ScJ215FatosContabeis;
+STORE * FROM FATOS_CONTABEIS INTO FATOS_CONTABEIS.QVD;
+DROP TABLE FATOS_CONTABEIS;
+
+
+TIPO_CONTABILIZAÇÃO:
+LOAD idTipoContabilizacao,
+    Descricao;
+SQL SELECT *
+FROM FISCON.dbo.TipoContabilizacao;
+STORE * FROM TIPO_CONTABILIZAÇÃO INTO TIPO_CONTABILIZAÇÃO.QVD;
+DROP TABLE TIPO_CONTABILIZAÇÃO;
+
+
