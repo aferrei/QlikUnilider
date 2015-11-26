@@ -22,7 +22,7 @@ FROM
 
 SECTION Application;
 Acesso:
-LOAD 
+LOAD  
 	 CENTRO_CUSTO.Descricao, 
      chaveccu, 
      NTNAME, 
