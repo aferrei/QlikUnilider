@@ -1,0 +1,706 @@
+SET ThousandSep='.';
+SET DecimalSep=',';
+SET MoneyThousandSep='.';
+SET MoneyDecimalSep=',';
+SET MoneyFormat='R$ #.##0,00;-R$ #.##0,00';
+SET TimeFormat='hh:mm:ss';
+SET DateFormat='DD/MM/YYYY';
+SET TimestampFormat='DD/MM/YYYY hh:mm:ss[.fff]';
+SET MonthNames='jan;fev;mar;abr;mai;jun;jul;ago;set;out;nov;dez';
+SET DayNames='seg;ter;qua;qui;sex;sáb;dom';
+
+
+SECTION Access;
+LOAD 
+     CENTRO_CUSTO.Descricao,
+     chaveccu , 
+     NTNAME, 
+     ACCESS
+FROM
+[C:\QlikView\Producao\Segurança 2.xlsx]
+(ooxml, embedded labels, table is Sheet1);
+
+SECTION Application;
+Acesso:
+LOAD 
+	 CENTRO_CUSTO.Descricao, 
+     chaveccu, 
+     NTNAME, 
+     ACCESS
+FROM
+[C:\QlikView\Producao\Segurança 2.xlsx]
+(ooxml, embedded labels, table is Sheet1);
+
+//Acesso_controladoria:
+//LOAD 
+////cd_emp, 
+//     diretoria as CENTRO_CUSTO.Descricao, 
+////     ccu, 
+//     USERNT 
+////     ACCESS
+//FROM
+//[C:\QlikView\Producao\Segurança 2.xlsx]
+//(ooxml, embedded labels, table is Sheet1);
+
+/*********AQUI COMEÇA O SCRIPT DA EFETIVIDADE**************/
+TEMP_CALEND:
+LOAD Distinct
+Date(Data) as Datap
+FROM
+[C:\QlikView\Producao\QVD\MOB\KM_RELAT.QVD]
+(qvd);
+	
+Calendario:
+NoConcatenate
+LOAD 
+Datap ,
+Day(Datap) as Dia,
+Month(Datap) as Mês,
+Year(Datap) as Ano,
+DayNumberOfQuarter(Datap) as [Dia Trimestre],
+DayNumberOfYear(Datap) as [Dia Ano],
+MonthName(Datap) as [Mes Ano],
+QuarterName(Datap) as [Quarter],
+Week(Datap) as [Semana],
+ceil(Month(Datap)/3)&'º Trim' as [Trimestre],
+WeekDay(Datap) as [Dia Semana]
+Resident TEMP_CALEND;
+
+DROP table TEMP_CALEND;
+
+
+dimensoes:
+
+LOAD * Inline [
+	NumDimensao, _dimensao
+	11, Ano
+	12, Mês
+	13, Vendedor
+	14, Cliente
+	15, Motivo
+	16, Coordenador
+	17, Gerente
+];
+metricas:
+LOAD *  Inline [
+	NumMetrica, _metricas
+	11, Qtd_naovenda
+	12, Qtd_naovisita
+	13, Qtd_visitasRealizadasRoteiro
+	14, Qtd_visitasProgramadas
+	15, Qtd_Pedidos
+	16, Qtd_Pedidos_RoteiroVis
+	18, Qtd_Pedidos_ForaRot
+	19, Qtd_visitasRealizadas
+	20, Qtd_visitasRealizadasForaRoteiro
+	21, VisitasNaoRealizadas
+	
+];
+
+
+/*********CARGA_VENDEDOR***************/
+LOAD
+	
+    Ativo,
+    //BairroRes,
+    CdEquipe as cd_equipe,
+    //CepRes,
+    //ChaveDispositivoMovel,
+    CodigoVendedor,
+    //Complemento,
+    //ConfiguracaoTabelaAlterada,
+    //DataDownload,
+    //EmailPassword,
+    //EmailPopPort,
+    //EmailPopServer,
+    //EmailSemAutenticacao,
+    //EmailSmptPort,
+    //EmailSmtpServer,
+    //EmailUser,
+    //EmailUseSSL,
+    EstRes,
+    //IDConfiguracaoTabelaVendedor,
+    //IDConfiguracaoVendedor,
+    //IDDispositivoMovel,
+    //IDProdutoVersao,
+    //IDTipoGrupo,
+    IDVendedor as id2,
+    IDVendedor as id3,
+    IDVendedor as IDvendedor2,
+    Logradouro,
+    MunicRes,
+    Nome,
+    Numero,
+    Pais
+    
+    //PermiteEnviarArquivoSuporte,
+    //PermitePrimeiroDownload,
+    //RowId,
+    //RowIdImagem,
+    //RowIdProdutoImagem,
+    //UtilizaPocket,
+    //UtilizaTab
+FROM
+[C:\QlikView\Producao\QVD\MOB\Vendedor.qvd]
+(qvd);
+JOIN
+LOAD
+	cd_vend as CodigoVendedor,
+	descricao
+FROM 
+[C:\QlikView\Producao\QVD\MOB\CATEGORIA.QVD] (qvd);
+
+CLIENTE:
+
+LOAD 
+	ativo,
+    cd_clien,
+    cd_coligacao,
+   // cd_emp,
+    cgc_cpf,
+    nome AS Nome_cli,
+    nome_res
+FROM [C:\QlikView\Producao\QVD\MOB\CLIENTE.QVD](qvd);
+
+    
+
+
+/*********CARGA_VENDEDORXKM***************/
+
+LOAD
+	IDRelatorioTipoKm,
+    IDRelatorioTipoKmVSVendedor,
+    IDVendedor as IDvendedor2
+FROM
+[C:\QlikView\Producao\QVD\MOB\vendedor_km.QVD]
+(qvd);
+
+/*********CARGA_TIPOKM***************/
+LOAD
+	Ativo as AtivoTPKM,
+    Descricao as TipoKM,
+    IDRelatorioTipoKm,
+    ValorLimite
+FROM
+[C:\QlikView\Producao\QVD\MOB\Tipo_km.QVD]
+(qvd);
+
+
+/*********CARGA_RELAT_KM***************/
+
+LOAD
+	AutoNumber(date(Data)&'|'&CodigoVendedor) as chaveabono,
+	//AutoNumberHash128(Data&'|'& IDVendedor) as chave2,
+	//CodigoVendedor,
+    Data as Datas,
+    //Year(Data) AS ANO,
+    //Month(Data)AS MES,
+    //Day(Data) AS DIA,
+    //WeekDay(Data) AS DIA_SEMANA,
+    DataFimTrabalho,
+    DataInicioTrabalho,
+    IdRelatorioCoordenadaKM,
+    //IDVendedor as id3,
+    KmRodado,
+    //Nome,
+    chaverot,
+    QtdePedidos,
+    QtdePedidosForaRoteiro,
+    QtdePedidosForaRoteiroCliente,
+    QtdePedidosRoteiro,
+    QtdePedidosRoteiroCliente,
+    QtdeVisitasForaRoteiro,
+    QtdeVisitasRoteiroProgramadas,
+    QtdeVisitasRoteiroRealizadas,
+    TempoCliente,
+    TempoImprodutivo,
+    TempoProdutivo
+    
+FROM
+[C:\QlikView\Producao\QVD\MOB\KM_RELAT.QVD]
+(qvd);
+
+/*********CARGA_GERENCIA***************/
+LOAD 
+	
+	//ativo,
+    //cd_emp,
+    chaveccu,
+    GER2,
+    cd_gerencia,
+    cd_vend_ger,
+    descricao as descricao_gerencia,
+    num_lock,
+    rowid
+FROM    
+[C:\QlikView\Producao\QVD\MOB\Gerencia.QVD]
+(qvd);
+/*********CARGA_EQUIPE***************/
+LOAD 
+	//ativo,
+    //cd_emp,	
+    cd_equipe,
+    cd_gerencia ,
+    cd_vend_sup,
+    descricao as descricao_equipe,
+    EquipeId
+    //num_lock,
+    //rowid,
+    //telemarketing
+FROM    
+[C:\QlikView\Producao\QVD\MOB\Equipe.QVD]
+(qvd);
+
+Coordenador:
+
+LOAD
+	   //ativo,
+       CodigoVendedorCoordenador AS cd_vend_sup,
+       nome as Coordenador
+FROM
+[C:\QlikView\Producao\QVD\MOB\COORDENADOR.qvd]
+(qvd);
+JOIN
+LOAD
+	cd_vend as cd_vend_sup,
+	descricao as descricao_coor
+FROM 
+[C:\QlikView\Producao\QVD\MOB\CATEGORIA.QVD] (qvd);
+
+
+Gerente:
+
+LOAD
+	   //ativo,
+       CodigoVendedorGerente AS cd_vend_ger,
+       nome as Gerente       
+FROM
+[C:\QlikView\Producao\QVD\MOB\GERENTE.qvd]
+(qvd);
+
+LOAD
+	cd_vend as cd_vend_ger,
+	descricao as descricao_ger
+FROM 
+[C:\QlikView\Producao\QVD\MOB\CATEGORIA.QVD] (qvd);
+
+DIRETORIA:
+LOAD 
+	//cd_diretoria,
+    //ativo,
+    //cd_emp,
+    cd_usuario,
+    descricao AS Diretoria,
+    chaveccu
+    
+FROM    
+[C:\QlikView\Producao\QVD\MOB\DIRETORIA.QVD]
+(qvd);
+
+COORDENADA:
+LOAD
+	//AutoNumberHash128(DtCoordenada&'|'& CodigoNaoVenda) as chave2,
+	chaveped,
+	//chavelink as chaverot  ,
+	CodigoAcao,
+    //CodigoCliente AS cd_clien,
+    CodigoNaoVenda,
+    //DtCoordenada,
+    chaveroteirocoord,
+    DtRecebimento,
+    IDCoordenada,
+    //IDVendedor as id2,
+    Latitude,
+    Longitude
+ FROM [C:\QlikView\Producao\QVD\MOB\COORDENADA.QVD](qvd);
+
+ACOES: 
+LOAD CodigoAcao,
+    Descricao
+FROM [C:\QlikView\Producao\QVD\MOB\ACOES.QVD](qvd);
+
+MOTIVOS:
+LOAD 
+	//AutoNumberHash128(date(DataHora)&'|'& CodigoMotivoNaoVenda) as chave2,
+	CodigoMotivo,
+	//DataHora,
+   	CodigoMotivoNaoVenda AS CodigoNaoVenda
+FROM [C:\QlikView\Producao\QVD\MOB\MOTIVOS.QVD](qvd);
+
+MOT_RES:
+LOAD
+cd_motivo as CodigoMotivo,
+descricao as Motivo_nao_venda
+FROM [C:\QlikView\Producao\QVD\MOB\mot_res.QVD](qvd);
+
+Pedidos:
+LOAD 
+    //CodigoAcao,
+    //CodigoCliente,
+    //CodigoVendedor,
+    //Descricao,
+    IDCoordenada,
+    SERIE,
+    //DtCoordenada,
+    //Latitude,
+    //Longitude,
+    //NumeroPedido,
+    //razao,
+    Roteiro as PedRoteiro,
+    visitado as PedRoteiroVIs
+FROM [C:\QlikView\Producao\QVD\MOB\Pedidos.QVD](qvd);
+
+Roteiro:
+LOAD
+	chaveroteirocoord as chaveroteirocoord2,
+	//chaverot,
+    //cd_clien,
+    CD_VEND
+    //data,
+    
+    
+FROM [C:\QlikView\Producao\QVD\MOB\Roteiro.QVD](qvd);
+
+
+LINKTABLECLIENTE:
+LOAD Distinct
+	chaveroteirocoord,
+	chaveroteirocoord as chaveroteirocoord2,
+	chaverot,
+	cd_clien
+    
+FROM [C:\QlikView\Producao\QVD\MOB\Roteiro.QVD](qvd);
+
+LINKTABLECLIENTE:
+LOAD Distinct
+	
+	chavelink as chaverot  ,
+	chaveroteirocoord,
+	chaveroteirocoord as chaveroteirocoord2,
+	CodigoCliente AS cd_clien
+	
+   
+ FROM [C:\QlikView\Producao\QVD\MOB\COORDENADA.QVD](qvd);
+
+
+LINKTABLEPRINCIPAL:
+LOAD
+	
+	chavelink as chaverot  ,
+	DATE(DtCoordenada)AS Datap,
+    IDVendedor as id2
+    
+ FROM [C:\QlikView\Producao\QVD\MOB\COORDENADA.QVD](qvd);
+
+LINKTABLEPRINCIPAL:
+
+LOAD
+	
+	chaverot,
+    DATE(data)AS Datap,
+    IDVendedor as id2
+    
+    
+FROM [C:\QlikView\Producao\QVD\MOB\Roteiro.QVD](qvd);
+
+
+ABONO:
+LOAD 
+	 AutoNumber(date(data) &'|'&cd_vend) as chaveabono,
+	 //data, 
+     motivo
+     //cd_vend
+     
+FROM
+[C:\QlikView\Producao\QVD\MOB\ABONO.QVD]
+(qvd);
+
+LINKTABLE2:
+LOAD Distinct 
+	 AutoNumber(date(data)&'|'&cd_vend) as chaveabono,
+	 date(data) AS Data, 
+     cd_vend 
+FROM
+[C:\QlikView\Producao\QVD\MOB\ABONO.QVD]
+(qvd);
+
+LINKTABLE2:
+LOAD Distinct
+	 AutoNumber(date(Data)&'|'&CodigoVendedor) as chaveabono,
+	 date(Data)as Data, 
+     CodigoVendedor as cd_vend
+From
+[C:\QlikView\Producao\QVD\MOB\KM_RELAT.QVD]
+(qvd);
+
+// Google Maps Key
+// get a key here http://code.google.com/apis/maps/signup.html
+gmap_key = 'ABQIAAAAt5IYbmHkt6f1Ol1V_U4w9BT6r2_GbCs3EDIDFDRpNvgK2BercxSFdJ1aoLc-y20ruG3S7DJfa5xgkw';
+//gmap_key = 'ABQIAAAAt5IYbmHkt6f1Ol1V_U4w9BSj7k5dki0B2TgSCxPjMq1BqYTXWhTXTMFxJ_sAAM17pVRXgFw3_OEZEg';
+max_zoom_level = 17; //maximum value 17 
+
+// Variables required for calculating map
+// No need to change these
+var_pi180=		'=pi()/180';
+var_lat_offset=	'0';
+var_mc2=		'=256*pow(2,$(var_zoom))';
+var_mc1=		'=256*pow(2,($(var_zoom)-1))';
+var_mid_lat=	'=min(latitude)+(1+var_lat_offset)*((max(latitude)-min(latitude))/2)';
+var_mid_long=	'=min(longitude)+(max(longitude)-min(longitude))/2';
+var_zoom=		'=max(aggr(if(max( round(256*pow(2,(_zoom_level -1)))+( longitude  *((256*pow(2,_zoom_level ))/360)) )-min( round(256*pow(2,(_zoom_level -1)))+( longitude  *((256*pow(2,_zoom_level ))/360)) ) <map_size_x AND max((256*pow(2,(_zoom_level-1)))+((0.5*log((1+(sin((latitude)*pi()/180)))/(1-(sin((latitude)*pi()/180)))))*((-256*pow(2,_zoom_level))/(2*pi()))))-min((256*pow(2,(_zoom_level-1)))+((0.5*log((1+(sin((latitude)*pi()/180)))/(1-(sin((latitude)*pi()/180)))))*((-256*pow(2,_zoom_level))/(2*pi()))))<map_size_y,_zoom_level,1),_zoom_level))';
+var_maptype=	'=if(isnull(only(maptype)),fieldvalue( '&chr(39)&'maptype'&chr(39)&', 1 ),maptype)';
+map_size_x=	    '640';
+map_size_y=     '400';
+
+SET HidePrefix='_' ;
+// Field required for calcualting best zoom level
+_zoom_level:
+Load RecNo( ) as _zoom_level autogenerate(max_zoom_level);
+
+maptype:
+LOAD * INLINE [
+    maptype
+    roadmap
+	mobile
+	satellite
+	terrain
+	hybrid 
+];
+/*
+For Each File in FileList ('c:\projeto\FOTOS_PRODUTOS\*.jpg')
+	FOTOS:
+	LOAD *, Replace (SubField ( ARQUIVO_IMAGEM,'\',5),'.JPG','') as CODIGO.PRODUTO;
+	LOAD '$(File)' as ARQUIVO_IMAGEM
+	AutoGenerate;
+	NEXT FILE; 
+*/
+
+/*********AQUI ACABA O SCRIPT DA EFETIVIDADE**************/
+
+/*********AQUI COMEÇA O SCRIPT DA CONTROLADORIA***********/
+
+Dimensoes:
+LOAD * INLINE [
+    NumDimensaoControl, _dimensaoControl
+    11, Ano
+    12, Mês
+    13, Dia
+    14, Grupo-Produto
+    15, Produto
+    16, Unidade
+];
+
+Metricas:
+LOAD * INLINE [
+    NumMetricaControl, _metricasControl
+    11, Qtde
+    12, Qtde-CTB
+    13, Qtde-Outros
+    14, Qtde-Pend-PEDV
+    15, Qtde-Pend_PEDV-CTB
+    16, Qtde-Cx
+    17, VL-ICM-Compra-CMP
+    18, VL-ICM-Compra-CRP
+    19, VL-ICM-Compra-CUE
+ ];
+
+
+Acento:
+MAPPING
+LOAD * INLINE [
+	F1, F2
+	Á, A
+	Ã, A
+	À, A
+	É, E
+	Ê, E
+	Í, I
+	Ó, O
+	Õ, O
+	Ô, O
+	Ú, U
+	Ü, U
+	á, a
+	ã, a
+	à, a
+	é, e
+	ê, e
+	í, i
+	ó, o
+	õ, o
+	ô, o
+	ú, u
+	ü, u
+	ç, c
+	Ç, C
+];
+
+
+
+
+
+//GERENCIA_DIRETORIA:
+//LOAD cd_ccusto AS CENTRO_CUSTO, 
+//     cd_diretoria 
+//     //cd_emp, 
+//     //cd_gerencia
+//FROM
+//[C:\QlikView\Producao\QVD\LINK_GERENCIA_DIRETORIA.QVD]
+//(qvd);
+//
+//DIRETORIA:
+//LOAD //ATIVO.DIRETORIA, 
+//     cd_diretoria, 
+//     //cd_emp, 
+//     //cd_usuario, 
+//     NOME_DIRETORIA
+//FROM
+//[C:\QlikView\Producao\QVD\DIRETORIA.QVD]
+//(qvd);
+//
+//
+//
+//
+//
+//
+//
+
+
+
+HIERARQUIA1:
+LOAD   left(PLANO_CONTA.Codigo,1)&'.0.00.00.000000' as Nivel1,
+       PLANO_CONTA.Descricao as descricao_nivel1,
+       '1' as A
+FROM
+[C:\QlikView\Producao\QVD\PLANO_CONTA.QVD]
+(qvd)
+where PLANO_CONTA.Codigo=(left(PLANO_CONTA.Codigo,1))
+      and PLANO_CONTA.idEmpresa <=6;
+
+
+
+
+HIERARQUIA2:
+LOAD   left(PLANO_CONTA.Codigo,3)&'.00.00.000000' as Nivel2,
+       PLANO_CONTA.Descricao as descricao_nivel2,
+       '1' as B
+FROM
+[C:\QlikView\Producao\QVD\PLANO_CONTA.QVD]
+(qvd)
+where PLANO_CONTA.Codigo=(left(PLANO_CONTA.Codigo,3))
+      and PLANO_CONTA.idEmpresa <=6;
+
+HIERARQUIA3:
+LOAD   left(PLANO_CONTA.Codigo,6)&'.00.000000' as Nivel3,
+       PLANO_CONTA.Descricao as descricao_nivel3,
+       '1' as C
+FROM
+[C:\QlikView\Producao\QVD\PLANO_CONTA.QVD]
+(qvd)
+where PLANO_CONTA.Codigo=(left(PLANO_CONTA.Codigo,6))
+      and PLANO_CONTA.idEmpresa <=6;
+
+HIERARQUIA4:
+LOAD   left(PLANO_CONTA.Codigo,9)&'.000000' as Nivel4,
+       PLANO_CONTA.Descricao as descricao_nivel4,
+       '1' as D
+FROM
+[C:\QlikView\Producao\QVD\PLANO_CONTA.QVD]
+(qvd)
+where PLANO_CONTA.Codigo=(left(PLANO_CONTA.Codigo,9))
+      and PLANO_CONTA.idEmpresa <=6;
+
+
+HIERARQUIA5:
+LOAD   left(PLANO_CONTA.Codigo,16) as Nivel5,
+       PLANO_CONTA.Descricao as descricao_nivel5,
+       '1' as E
+FROM
+[C:\QlikView\Producao\QVD\PLANO_CONTA.QVD]
+(qvd)
+where PLANO_CONTA.Codigo=(left(PLANO_CONTA.Codigo,16))
+      and PLANO_CONTA.idEmpresa <=6;
+
+
+
+PLANOCONTA:
+LOAD PLANO_CONTA.idScI050PlanoConta AS PLANO_CONTA, 
+     PLANO_CONTA.DataInclusao, 
+     PLANO_CONTA.Codigo,
+     left(PLANO_CONTA.Codigo,1)&'.0.00.00.000000' as Nivel1,
+     left(PLANO_CONTA.Codigo,3)&'.00.00.000000' as Nivel2,
+     left(PLANO_CONTA.Codigo,6)&'.00.000000' as Nivel3,
+     left(PLANO_CONTA.Codigo,9)&'.000000' as Nivel4,
+     left(PLANO_CONTA.Codigo,16)as Nivel5,
+     PLANO_CONTA.Descricao, 
+     PLANO_CONTA.TipoConta, 
+     PLANO_CONTA.Natureza, 
+     PLANO_CONTA.Nivel, 
+     PLANO_CONTA.Ativo, 
+     PLANO_CONTA.idEmpresa, 
+     PLANO_CONTA.idScI050PlanoContaTotalizadora, 
+     PLANO_CONTA.GrupoConta
+FROM
+[C:\QlikView\Producao\QVD\PLANO_CONTA.QVD]
+(qvd)
+WHERE PLANO_CONTA.idEmpresa <=6;
+
+
+
+
+
+
+
+
+LANCAMENTO_CONTABIL:
+LOAD LANCAMENTO_CONTABIL.idEmpresa&'|'&LANCAMENTO_CONTABIL.idScI200LancamentoContabil AS LancamentoContabil,  
+     LANCAMENTO_CONTABIL.Numero, 
+     LANCAMENTO_CONTABIL.Data,
+     YEAR(LANCAMENTO_CONTABIL.Data) AS ano,
+     MONTH(LANCAMENTO_CONTABIL.Data) AS mes,
+     DAY(LANCAMENTO_CONTABIL.Data) AS dia,
+     LANCAMENTO_CONTABIL.Valor, 
+     LANCAMENTO_CONTABIL.Tipo, 
+     LANCAMENTO_CONTABIL.idEmpresa, 
+     LANCAMENTO_CONTABIL.idContabilizacao, 
+     LANCAMENTO_CONTABIL.idTipoContabilizacao, 
+     LANCAMENTO_CONTABIL.Alterado, 
+     //LANCAMENTO_CONTABIL.RowId, 
+     LANCAMENTO_CONTABIL.idContabilizacaoSeq, 
+     LANCAMENTO_CONTABIL.idContabilizacaoOld, 
+     LANCAMENTO_CONTABIL.TipoInclusao, 
+     LANCAMENTO_CONTABIL.Reprocessar, 
+     LANCAMENTO_CONTABIL.DataGeracao
+FROM
+[C:\QlikView\Producao\QVD\LANCAMENTO_CONTABIL.QVD]
+(qvd);
+
+
+PARTIDA_LANCAMENTO:
+LOAD PARTIDA_LANCAMENTO.idScI250PartidasLancamento, 
+     PARTIDA_LANCAMENTO.idEmpresa&'|'&PARTIDA_LANCAMENTO.idScI200LancamentoContabil AS LancamentoContabil, 
+     PARTIDA_LANCAMENTO.idScI050PlanoConta AS PLANO_CONTA, 
+     PARTIDA_LANCAMENTO.idScI100CentroCusto AS CENTRO_CUSTO, 
+     PARTIDA_LANCAMENTO.ValorPartida, 
+     PARTIDA_LANCAMENTO.NaturezaPartida, 
+     PARTIDA_LANCAMENTO.NumeroArquivamento, 
+     PARTIDA_LANCAMENTO.idScI075HistoricoPadronizado, 
+     PARTIDA_LANCAMENTO.Historico, 
+     PARTIDA_LANCAMENTO.idSf0150Participante, 
+     PARTIDA_LANCAMENTO.idEmpresa
+FROM
+[C:\QlikView\Producao\QVD\PARTIDA_LANCAMENTO.QVD]
+(qvd)
+where PARTIDA_LANCAMENTO.idEmpresa <= 6;
+
+CENTROCUSTO:
+LOAD CENTRO_CUSTO.idScI100CentroCusto  AS CENTRO_CUSTO, 
+     CENTRO_CUSTO.Codigo, 
+     CENTRO_CUSTO.Descricao, 
+     CENTRO_CUSTO.Descricao as ccd22,
+     CENTRO_CUSTO.Ativo, 
+     CENTRO_CUSTO.idEmpresa,
+     CENTRO_CUSTO.DataInclusao
+FROM
+[C:\QlikView\Producao\QVD\CENTRO_CUSTO.QVD]
+(qvd);
