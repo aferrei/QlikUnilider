@@ -1,0 +1,524 @@
+//***CRIADO POR ALEX FERREIRA EM 10/2015***//
+
+SET ThousandSep='.';
+SET DecimalSep=',';
+SET MoneyThousandSep='.';
+SET MoneyDecimalSep=',';
+SET MoneyFormat='R$ #.##0,00;-R$ #.##0,00';
+SET TimeFormat='hh:mm:ss';
+SET DateFormat='DD/MM/YYYY';
+SET TimestampFormat='DD/MM/YYYY hh:mm:ss[.fff]';
+SET MonthNames='jan;fev;mar;abr;mai;jun;jul;ago;set;out;nov;dez';
+SET DayNames='seg;ter;qua;qui;sex;sáb;dom';
+
+ODBC CONNECT32 TO mob(UserID is sa, Password is moitgt2526 );
+
+
+
+ACOES:
+LOAD CodigoAcao,
+    Descricao;
+SQL SELECT cast (CodigoAcao as varchar)+'a' as CodigoAcao,
+    Descricao
+FROM DatacenterUnilider.dbo.MOTIVOS;
+
+STORE * FROM ACOES INTO C:\QlikView\Producao\QVD\MOB\ACOES.QVD;
+DROP TABLE ACOES;
+
+MOTIVOS:
+LOAD CodigoMotivo,
+	DataHora,
+    CodigoMotivoNaoVenda;
+SQL SELECT 
+	cast(CodigoMotivo as varchar)+'a' as CodigoMotivo,
+	cast(CodigoMotivoNaoVenda as varchar)+cast(cast(DataHora AS [date]) AS [varchar])+CAST(CodigoCliente AS varchar)as CodigoMotivoNaoVenda,
+	DataHora
+FROM DatacenterUnilider.dbo.MotivoNaoVenda;
+
+STORE * FROM MOTIVOS INTO C:\QlikView\Producao\QVD\MOB\MOTIVOS.QVD;
+DROP TABLE MOTIVOS;
+
+ABONO:
+LOAD "cd_vend",
+    data,
+    motivo;
+SQL SELECT 
+	CAST(cd_vend AS [varchar](4))+'a' as cd_vend,
+    cast(data as date) as data,
+    motivo
+FROM DatacenterUnilider.dbo.ABONOS;
+
+STORE * FROM ABONO INTO C:\QlikView\Producao\QVD\MOB\ABONO.QVD;
+DROP TABLE ABONO;
+
+COORDENADA:
+
+LOAD
+	chaveped,
+ 	chavelink,
+	CodigoAcao,
+	IDCoordenada,
+    CodigoCliente,
+    chave,
+    CodigoNaoVenda,
+    DtCoordenada,
+    DtRecebimento,
+    IDVendedor,
+    Latitude,
+    chaveroteirocoord,
+    Longitude;
+SELECT DISTINCT
+	cast(cast(DtCoordenada AS date) AS [varchar])+ cast(IDVendedor AS varchar) + cast(CodigoCliente AS varchar) + cast(NumeroPedido AS varchar) + cast(CodigoAcao AS varchar) as chaveped,
+	CAST(IDVendedor AS VARCHAR(4))+CAST(CAST(DtCoordenada AS DATE) AS VARCHAR) AS chavelink,
+	cast(cast(DtCoordenada AS date)AS varchar)+cast(CodigoCliente AS varchar)+cast(IDVendedor AS [varchar](4)) as chaveroteirocoord,
+	cast(IDVendedor AS [varchar](4))+cast(CodigoCliente AS varchar) as chave,
+	cast (CodigoAcao as varchar)+'a' as CodigoAcao,
+	cast (CodigoNaoVenda as varchar)+CAST(CAST(DtCoordenada AS DATE)AS VARCHAR)+CAST(CodigoCliente AS varchar)as CodigoNaoVenda,
+    CodigoCliente,
+    cast(DtCoordenada as date) as DtCoordenada ,
+    DtRecebimento,
+    IDCoordenada,
+    cast(IDVendedor AS [varchar](4))+'a' as IDVendedor,
+    Latitude,
+    Longitude
+    
+FROM DatacenterUnilider.dbo.Coordenada 
+
+WHERE YEAR(DtCoordenada) >= 2015
+and
+CodigoAcao != 28
+;
+STORE * FROM COORDENADA INTO C:\QlikView\Producao\QVD\MOB\COORDENADA.QVD;
+DROP TABLE COORDENADA;
+
+km_relat:
+LOAD CodigoVendedor,
+    Data,
+    chavelink,
+    DataFimTrabalho,
+    DataInicioTrabalho,
+    IdRelatorioCoordenadaKM,
+    IDVendedor,
+    KmRodado,
+    Nome,
+    QtdePedidos,
+    QtdePedidosForaRoteiro,
+    QtdePedidosForaRoteiroCliente,
+    QtdePedidosRoteiro,
+    QtdePedidosRoteiroCliente,
+    QtdeVisitasForaRoteiro,
+    QtdeVisitasRoteiroProgramadas,
+    QtdeVisitasRoteiroRealizadas,
+    TempoCliente,
+    TempoImprodutivo,
+    TempoProdutivo,
+    chaverot;
+SQL SELECT
+	CAST(IDVendedor AS VARCHAR)+CAST(CAST(Data AS DATE) AS VARCHAR) AS chaverot,
+	CAST(IDVendedor AS VARCHAR)+CAST(CAST(Data AS DATE) AS VARCHAR) AS chavelink, 
+	cast(CodigoVendedor AS [varchar](4))+'a'  as CodigoVendedor,
+    cast(Data as date) AS Data,
+    DataFimTrabalho,
+    DataInicioTrabalho,
+    IdRelatorioCoordenadaKM,
+    cast(IDVendedor AS [varchar](4))+'a' as IDVendedor,
+    KmRodado,
+    Nome,
+    QtdePedidos,
+    QtdePedidosForaRoteiro,
+    QtdePedidosForaRoteiroCliente,
+    QtdePedidosRoteiro,
+    QtdePedidosRoteiroCliente,
+    QtdeVisitasForaRoteiro,
+    QtdeVisitasRoteiroProgramadas,
+    QtdeVisitasRoteiroRealizadas,
+    TempoImprodutivo,
+    TempoProdutivo,
+	ISNULL
+  (
+   CONVERT(varchar( 6 ), SUM(TempoCliente) / 3600)
+   + ':' + RIGHT('0' + CONVERT(varchar(2), (SUM(TempoCliente) % 3600) / 60), 2)
+  , '00:00') as TempoCliente
+  
+	FROM DatacenterUnilider.dbo.RelatorioCoordenadaKMMultiplaVisita
+
+GROUP BY
+IdRelatorioCoordenadaKM,
+Data,
+IDVendedor,
+CodigoVendedor,
+Nome,
+QtdeVisitasRoteiroProgramadas,
+QtdeVisitasRoteiroRealizadas,
+QtdeVisitasForaRoteiro,
+QtdePedidos,
+QtdePedidosRoteiro,
+QtdePedidosRoteiroCliente,
+QtdePedidosForaRoteiro,
+QtdePedidosForaRoteiroCliente,
+KmRodado,
+TempoProdutivo,
+DataInicioTrabalho,
+DataFimTrabalho,
+TempoImprodutivo,
+TempoCliente
+
+;
+STORE * FROM km_relat INTO C:\QlikView\Producao\QVD\MOB\KM_RELAT.QVD;
+DROP TABLE km_relat;
+
+
+km_relat_envio:
+LOAD CodigoVendedor,
+    Data,
+    chavelink,
+    DataFimTrabalho,
+    DataInicioTrabalho,
+    IdRelatorioCoordenadaKM,
+    IDVendedor,
+    KmRodado,
+    Nome,
+    QtdePedidos,
+    QtdePedidosForaRoteiro,
+    QtdePedidosForaRoteiroCliente,
+    QtdePedidosRoteiro,
+    QtdePedidosRoteiroCliente,
+    QtdeVisitasForaRoteiro,
+    QtdeVisitasRoteiroProgramadas,
+    QtdeVisitasRoteiroRealizadas,
+    TempoCliente,
+    TempoImprodutivo,
+    TempoProdutivo,
+    chaverot;
+SQL SELECT 
+	CAST(IDVendedor AS VARCHAR)+CAST(CAST(Data AS DATE) AS VARCHAR) AS chaverot,
+	CAST(IDVendedor AS VARCHAR)+CAST(CAST(Data AS DATE) AS VARCHAR) AS chavelink, 
+	cast(CodigoVendedor AS [varchar](4))+'a'  as CodigoVendedor,
+    cast(Data as date) AS Data,
+    DataFimTrabalho,
+    DataInicioTrabalho,
+    IdRelatorioCoordenadaKM,
+    cast(IDVendedor AS [varchar](4))+'a' as IDVendedor,
+    KmRodado,
+    Nome,
+    QtdePedidos,
+    QtdePedidosForaRoteiro,
+    QtdePedidosForaRoteiroCliente,
+    QtdePedidosRoteiro,
+    QtdePedidosRoteiroCliente,
+    QtdeVisitasForaRoteiro,
+    QtdeVisitasRoteiroProgramadas,
+    QtdeVisitasRoteiroRealizadas,
+    TempoImprodutivo,
+    TempoProdutivo,
+	ISNULL
+  (
+   CONVERT(varchar( 6 ), SUM(TempoCliente) / 3600)
+   + ':' + RIGHT('0' + CONVERT(varchar(2), (SUM(TempoCliente) % 3600) / 60), 2)
+  , '00:00') as TempoCliente
+  
+	FROM DatacenterUnilider.dbo.RelatorioCoordenadaKMMultiplaVisita
+	where cast(Data as date) = (select cast(max(Data) as date) from DatacenterUnilider.dbo.RelatorioCoordenadaKMMultiplaVisita)
+
+GROUP BY
+IdRelatorioCoordenadaKM,
+Data,
+IDVendedor,
+CodigoVendedor,
+Nome,
+QtdeVisitasRoteiroProgramadas,
+QtdeVisitasRoteiroRealizadas,
+QtdeVisitasForaRoteiro,
+QtdePedidos,
+QtdePedidosRoteiro,
+QtdePedidosRoteiroCliente,
+QtdePedidosForaRoteiro,
+QtdePedidosForaRoteiroCliente,
+KmRodado,
+TempoProdutivo,
+DataInicioTrabalho,
+DataFimTrabalho,
+TempoImprodutivo,
+TempoCliente
+
+;
+STORE * FROM km_relat_envio INTO C:\QlikView\Producao\QVD\MOB\KM_RELAT_ENVIO.QVD;
+DROP TABLE km_relat_envio;
+
+Tipo_km:
+LOAD Ativo,
+    Descricao,
+    IDRelatorioTipoKm,
+    ValorLimite;
+SQL SELECT Ativo,
+    Descricao,
+    IDRelatorioTipoKm,
+    ValorLimite
+FROM DatacenterUnilider.dbo.RelatorioTipoKm;
+STORE * FROM Tipo_km INTO C:\QlikView\Producao\QVD\MOB\Tipo_km.QVD;
+DROP TABLE Tipo_km;
+
+vendedor_km:
+LOAD IDRelatorioTipoKm,
+    IDRelatorioTipoKmVSVendedor,
+    IDVendedor;
+SQL SELECT IDRelatorioTipoKm,
+    IDRelatorioTipoKmVSVendedor,
+    cast(IDVendedor as varchar(4))+'a' as IDVendedor
+FROM DatacenterUnilider.dbo.RelatorioTipoKmVSVendedor;
+STORE * FROM vendedor_km INTO C:\QlikView\Producao\QVD\MOB\vendedor_km.QVD;
+DROP TABLE vendedor_km;
+
+Vendedor:
+LOAD Ativo,
+    BairroRes,
+    CdEquipe,
+    CepRes,
+    ChaveDispositivoMovel,
+    CodigoVendedor,
+    Complemento,
+    ConfiguracaoTabelaAlterada,
+    DataDownload,
+    EmailPassword,
+    EmailPopPort,
+    EmailPopServer,
+    EmailSemAutenticacao,
+    EmailSmptPort,
+    EmailSmtpServer,
+    EmailUser,
+    EmailUseSSL,
+    EstRes,
+    IDConfiguracaoTabelaVendedor,
+    IDConfiguracaoVendedor,
+    IDDispositivoMovel,
+    IDProdutoVersao,
+    IDTipoGrupo,
+    IDVendedor,
+    Logradouro,
+    MunicRes,
+    Nome,
+    Numero,
+    Pais,
+    PermiteEnviarArquivoSuporte,
+    PermitePrimeiroDownload,
+    RowId,
+    RowIdImagem,
+    RowIdProdutoImagem,
+    UtilizaPocket,
+    UtilizaTab;
+SQL SELECT Ativo,
+    BairroRes,
+    cast(CdEquipe as varchar(4))+'a' as CdEquipe,
+    CepRes,
+    ChaveDispositivoMovel,
+    cast(CodigoVendedor as varchar(4))+'a' as CodigoVendedor,
+    Complemento,
+    ConfiguracaoTabelaAlterada,
+    DataDownload,
+    EmailPassword,
+    EmailPopPort,
+    EmailPopServer,
+    EmailSemAutenticacao,
+    EmailSmptPort,
+    EmailSmtpServer,
+    EmailUser,
+    EmailUseSSL,
+    EstRes,
+    IDConfiguracaoTabelaVendedor,
+    IDConfiguracaoVendedor,
+    IDDispositivoMovel,
+    IDProdutoVersao,
+    IDTipoGrupo,
+    cast(IDVendedor as varchar(4))+'a' as IDVendedor,
+    Logradouro,
+    MunicRes,
+    Nome,
+    Numero,
+    Pais,
+    PermiteEnviarArquivoSuporte,
+    PermitePrimeiroDownload,
+    RowId,
+    RowIdImagem,
+    RowIdProdutoImagem,
+    UtilizaPocket,
+    UtilizaTab
+FROM DatacenterUnilider.dbo.Vendedor;
+
+STORE * FROM Vendedor INTO C:\QlikView\Producao\QVD\MOB\Vendedor.QVD;
+DROP TABLE Vendedor;
+
+ODBC CONNECT TO BI_Comercial_Unilider(UserID is qlik, Password is qlikrel);
+
+
+Equipe:
+LOAD ativo,
+    cd_emp,
+    cd_equipe,
+    cd_gerencia,
+    cd_vend_sup,
+    descricao,
+    EquipeId,
+    num_lock,
+    rowid,
+    telemarketing;
+SQL SELECT ativo,
+    cd_emp,
+    cast(cd_equipe as varchar(4))+'a' as cd_equipe,
+    cast(cd_gerencia as varchar(4))+'a' as cd_gerencia,
+    cast(cd_vend_sup as varchar(4))+'a' as cd_vend_sup ,
+    descricao,
+    EquipeId,
+    num_lock,
+    rowid,
+    telemarketing
+FROM MOINHO.dbo.equipe;
+
+STORE * FROM Equipe INTO C:\QlikView\Producao\QVD\MOB\Equipe.QVD;
+DROP TABLE Equipe;
+
+//ODBC CONNECT TO BI_Comercial_Unilider(UserID is qlik, Password is qlikrel);
+
+Gerencia:
+LOAD ativo,
+    cd_emp,
+    cd_gerencia,
+    ccu,
+    cd_vend_ger,
+    descricao,
+    num_lock,
+    chaveccu,
+    GER2,
+    rowid;
+SQL SELECT ativo,
+    cd_emp,
+    CAST(cd_gerencia as varchar(4))+'a' AS cd_gerencia,
+    cast(cd_emp AS varchar)+left(descricao,3) as chaveccu,
+    cd_gerencia AS GER2,
+    cd_vend_ger+'a' as cd_vend_ger,
+    left(descricao,3) as ccu,
+    descricao,
+    num_lock,
+    rowid
+FROM MOINHO.dbo.gerencia;
+
+STORE * FROM Gerencia INTO C:\QlikView\Producao\QVD\MOB\Gerencia.QVD;
+DROP TABLE Gerencia;
+
+DIRETORIA:
+
+LOAD 
+    cd_diretoria,
+    ativo,
+    cd_emp,
+    cd_usuario,
+    descricao;
+SQL SELECT ativo,
+    cd_diretoria,
+    cd_emp,
+    cd_usuario,
+    descricao
+FROM MOINHO.dbo.unl_diretoria;
+JOIN
+LOAD 
+    diretoria as cd_diretoria,
+    ccu,
+    cd_emp,
+    chaveccu,
+    USERNT;
+SQL SELECT ccu,
+    diretoria,
+    cd_emp,
+    cd_emp + ccu as chaveccu,
+    USERNT
+    
+    
+FROM MOINHO.dbo.unl_ger_diretoria;
+
+
+STORE * FROM DIRETORIA INTO C:\QlikView\Producao\QVD\MOB\Diretoria.QVD;
+DROP TABLE DIRETORIA;
+
+mot_res:
+LOAD
+cd_motivo,
+descricao;
+SQL SELECT
+	cast(cd_motivo as varchar)+'a' as cd_motivo,
+	descricao
+FROM MOINHO.dbo.mot_res;
+
+STORE * FROM mot_res INTO C:\QlikView\Producao\QVD\MOB\mot_res.QVD;
+DROP TABLE mot_res;
+
+GERENTE:
+LOAD
+CodigoVendedorGerente,
+nome,
+ativo; 
+SQL    SELECT ativo,
+       cast(dbo.vendedor.cd_vend as varchar(4))+'a' as CodigoVendedorGerente,
+       nome
+    
+FROM MOINHO.dbo.vendedor
+
+WHERE
+dbo.vendedor.cd_vend IN	(SELECT cd_vend_ger FROM dbo.gerencia) 
+;
+STORE * FROM GERENTE INTO C:\QlikView\Producao\QVD\MOB\GERENTE.QVD;
+DROP TABLE GERENTE;
+
+
+COORDENADOR:
+LOAD
+CodigoVendedorCoordenador,
+nome,
+ativo; 
+
+SQL    SELECT ativo,
+       cast(dbo.vendedor.cd_vend as varchar(4))+'a' as CodigoVendedorCoordenador,
+       nome
+    
+FROM MOINHO.dbo.vendedor
+
+WHERE
+dbo.vendedor.cd_vend IN	(SELECT dbo.equipe.cd_vend_sup FROM dbo.equipe) 
+;
+STORE * FROM COORDENADOR INTO C:\QlikView\Producao\QVD\MOB\COORDENADOR.QVD;
+DROP TABLE COORDENADOR;
+
+
+CATEGORIA:
+LOAD
+cd_vend,
+descricao;
+
+SQL SELECT
+cast(v.cd_vend as varchar(4))+'a' AS cd_vend,
+c.descricao
+
+FROM MOINHO.dbo.vendedor v
+JOIN
+MOINHO.dbo.categ c
+ON c.categ = v.categ
+;
+STORE * FROM CATEGORIA INTO C:\QlikView\Producao\QVD\MOB\CATEGORIA.QVD;
+DROP TABLE CATEGORIA;
+
+ODBC CONNECT TO mob (XUserId is OOXEXZFMRD, XPassword is IbUYdWdNJDdOGaJGVRMMDdD);
+
+VEND_CLI:
+LOAD
+chave,
+cd_vend,
+cd_clien
+;
+SQL SELECT cd_clien,
+    cd_vend,
+    chave
+FROM DatacenterUnilider.dbo."alx_cliente_vendedor";
+
+
+STORE * FROM VEND_CLI INTO C:\QlikView\Producao\QVD\MOB\VEND_CLI.QVD;
+DROP TABLE VEND_CLI;
+
+
